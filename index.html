@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>♣블랙잭♣</title>
+
+  <!-- PWA: manifest & iOS/meta -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- iOS는 루트의 apple-touch-icon.png를 가장 신뢰 -->
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111734; --panel2:#0e1530; --acc:#7dd3fc; --good:#22c55e; --bad:#ef4444; --text:#e8f1ff;
+      --card:#ffffff; --card-text:#0e0e16; --shadow:0 12px 40px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 700px at 70% 20%, #16244b, #0b1020);font-family:ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;color:var(--text)}
+    .wrap{max-width:1100px;margin:24px auto;padding:16px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#22d3ee);box-shadow:0 0 14px rgba(125,211,252,.8)}
+    h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.2px}
+    .badge{padding:6px 10px;border-radius:999px;font-size:12px;background:linear-gradient(135deg,#1f2e5a,#0e1736);border:1px solid #273a75;color:#bfe6ff;box-shadow:var(--shadow)}
+
+    .board{margin-top:16px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .table{background:linear-gradient(160deg,#0e1530,#0a1128);border:1px solid #1c2a57;border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+    .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;min-height:145px;padding:8px 0}
+    .who{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px 0}
+    .who .title{font-size:14px;opacity:.9}
+    .who .score{font-weight:800;font-size:18px}
+
+    .controls{background:linear-gradient(160deg,#0d1738,#0a122b);border:1px solid #1b2a57;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+    .btns{display:flex;flex-wrap:wrap;gap:8px}
+    button{appearance:none;border:0;cursor:pointer;border-radius:12px;padding:12px 14px;font-weight:700;color:#071021;background:linear-gradient(180deg,#bfe6ff,#7dd3fc);box-shadow:0 6px 16px rgba(125,211,252,.3), inset 0 1px rgba(255,255,255,.2)}
+    button:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.6)}
+    .btn-ghost{background:transparent;color:#bfe6ff;border:1px solid #294080}
+    .btn-green{background:linear-gradient(180deg,#bbf7d0,#34d399)}
+    .kbd{font:600 12px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:.3em .6em;border-radius:7px;border:1px solid #2a3d70;color:#bfe6ff;background:#0e1736}
+
+    .card{width:78px;height:110px;border-radius:14px;background:var(--card);color:var(--card-text);display:grid;grid-template-rows:auto 1fr auto;padding:8px;box-shadow:0 10px 22px rgba(0,0,0,.35);border:1px solid #eaeaf3;position:relative}
+    .card .suit{font-size:16px}
+    .card .rank{font-size:22px;font-weight:900}
+    .card .big{display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.9}
+    .card.red{color:#cc2131}
+    .card.back{background:repeating-linear-gradient(45deg,#13214a 0px,#13214a 8px,#162960 8px,#162960 16px);border:1px solid #0c1532}
+
+    .status{margin-top:10px;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,#0b142f,#0a1028);border:1px solid #1b2a57;color:#cfeaff;min-height:20px}
+    .status.good{border-color:#1f8a4c}
+    .status.bad{border-color:#933232}
+
+    .trainer{background:linear-gradient(160deg,#0a142e,#071024);border:1px dashed #2b407a;border-radius:16px;padding:12px}
+    .trainer h3{margin:0 0 6px 0;font-size:14px;color:#a8ecff}
+    .trainer small{opacity:.8}
+    .trainer .panel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+
+    .rig{display:none;position:fixed;inset:0;background:rgba(5,9,20,.72);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:16px;z-index:50}
+    .rig .card{box-shadow:0 10px 40px rgba(0,0,0,.55)}
+    .rig .modal{width:min(960px,96vw);background:linear-gradient(160deg,#0e1736,#0b132d);border:1px solid #23376f;border-radius:18px;padding:18px;color:#e7f2ff}
+    .rig h2{margin:0 0 8px;font-size:18px}
+    .rig-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+    .rig-col{background:#0a122b;border:1px solid #223467;border-radius:14px;padding:12px}
+    .rig-col h4{margin:0 0 8px;font-size:14px}
+    .rig .row2{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    select{background:#0c1738;border:1px solid #2b407a;border-radius:10px;color:#cfeaff;padding:10px 12px}
+    .rig .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+    .footer{margin-top:14px;opacity:.7;font-size:12px;text-align:center}
+    .debug{font-size:12px;opacity:.7;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo"><div class="dot"></div><h1>♣블랙잭♣</h1><span class="badge">2025 포렌사이언스</span></div>
+      <div class="badge">단축키: <span class="kbd">H</span> Hit · <span class="kbd">S</span> Stand · <span class="kbd">N</span> 새 라운드 · <span class="kbd">T</span> 관리자모드</div>
+    </div>
+
+    <div class="board">
+      <section class="table">
+        <div class="who"><div class="title">딜러</div><div class="score" id="dealerScore">–</div></div>
+        <div class="row" id="dealer"></div>
+        <hr style="border:0;border-top:1px solid #1c2a57;margin:8px 0">
+        <div class="who"><div class="title">플레이어</div><div class="score" id="playerScore">–</div></div>
+        <div class="row" id="player"></div>
+        <div class="status" id="status">라운드를 시작하세요.</div>
+        <div class="debug" id="debug"></div>
+      </section>
+
+      <aside class="controls">
+        <div class="btns">
+          <button id="btnNew">새 라운드 (N)</button>
+          <button id="btnHit" disabled>히트 (H)</button>
+          <button id="btnStand" disabled>스탠드 (S)</button>
+          <button id="btnToggleTrainer" class="btn-ghost">관리자모드 (T): OFF</button>
+          <!-- 설치 버튼: 조건 충족 시 노출 -->
+          <button id="btnInstall" class="btn-green" style="display:none">앱 설치</button>
+        </div>
+
+        <div id="trainerBox" class="trainer" style="display:none">
+          <h3>관리자모드 켜짐 <small>— 카드 구성</small></h3>
+          <div class="panel">
+            <button id="btnRigHands" class="btn-green">초기 패 선택</button>
+            <button id="btnReveal" class="btn-ghost">딜러 카드 공개</button>
+            <button id="btnResetDeck" class="btn-ghost">덱 재구성</button>
+            <span style="opacity:.8">· 시작 전 설정 권장</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">2025 포렌사이언스 ♣블랙잭♣</div>
+  </div>
+
+  <!-- Rig Modal -->
+  <div class="rig" id="rigModal" aria-hidden="true">
+    <div class="modal">
+      <h2>초기 패 강제 선택 (중복 금지)</h2>
+      <div class="rig-grid">
+        <div class="rig-col">
+          <h4>플레이어</h4>
+          <div class="row2"><label style="width:64px">1장</label><select id="p1"></select><div class="card" id="p1prev"></div></div>
+          <div class="row2"><label style="width:64px">2장</label><select id="p2"></select><div class="card" id="p2prev"></div></div>
+        </div>
+        <div class="rig-col">
+          <h4>딜러</h4>
+          <div class="row2"><label style="width:64px">1장</label><select id="d1"></select><div class="card" id="d1prev"></div></div>
+          <div class="row2"><label style="width:64px">2장</label><select id="d2"></select><div class="card" id="d2prev"></div></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-ghost" id="rigCancel">취소</button>
+        <button class="btn-green" id="rigApply">적용하고 라운드 시작</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Utilities ---
+    const SUITS = ["♠", "♥", "♦", "♣"];
+    const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+    const RANK_VALUE = r => r === 'A' ? 11 : (['K','Q','J'].includes(r) ? 10 : parseInt(r));
+
+    const el = id => document.getElementById(id);
+    const $dealer = el('dealer'), $player = el('player');
+    const $dealerScore = el('dealerScore'), $playerScore = el('playerScore');
+    const $status = el('status'); const $debug = el('debug');
+
+    let shoe = [];
+    let dealer = [], player = [];
+    let inRound = false;
+    let trainer = false;
+    let dealerHidden = true; // dealer second card hidden at start
+
+    function freshShoe(decks=4){
+      shoe = [];
+      for(let d=0; d<decks; d++){
+        for(const s of SUITS){
+          for(const r of RANKS){
+            shoe.push({suit:s, rank:r, id:`${r}${s}`});
+          }
+        }
+      }
+      // Fisher-Yates shuffle
+      for(let i=shoe.length-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [shoe[i], shoe[j]] = [shoe[j], shoe[i]];
+      }
+    }
+
+    function calcScore(cards){
+      let total = 0, aces = 0;
+      for(const c of cards){
+        total += RANK_VALUE(c.rank);
+        if(c.rank==='A') aces++;
+      }
+      while(total>21 && aces>0){ total -= 10; aces--; }
+      return total;
+    }
+
+    function render(){
+      // dealer
+      $dealer.innerHTML = '';
+      dealer.forEach((c, idx)=>{
+        const hidden = dealerHidden && idx===1 && inRound;
+        $dealer.appendChild(cardEl(hidden ? null : c));
+      });
+      // player
+      $player.innerHTML = '';
+      player.forEach(c=>$player.appendChild(cardEl(c)));
+      // scores
+      $playerScore.textContent = calcScore(player);
+      $dealerScore.textContent = dealerHidden ? (dealer.length? RANK_VALUE(dealer[0].rank): '–') : calcScore(dealer);
+    }
+
+    function cardEl(card){
+      const div = document.createElement('div');
+      div.className = 'card' + (card && (card.suit==='♥'||card.suit==='♦') ? ' red' : '');
+      if(!card){ div.className = 'card back'; return div; }
+      div.innerHTML = `<div class="suit">${card.suit}</div><div class="big">${card.suit}</div><div class="rank">${card.rank}</div>`;
+      return div;
+    }
+
+    function dealOne(to){
+      if(shoe.length===0) freshShoe();
+      const c = shoe.pop();
+      to.push(c);
+    }
+
+    function startRound(rigged){
+      dealer = []; player = []; dealerHidden = true; inRound = true;
+      $status.className = 'status'; $status.textContent = '라운드 시작! 히트(H) 또는 스탠드(S).';
+      if(rigged){
+        player.push(rigged.p1, rigged.p2);
+        dealer.push(rigged.d1, rigged.d2);
+        const ids = new Set([rigged.p1.id,rigged.p2.id,rigged.d1.id,rigged.d2.id]);
+        shoe = shoe.filter(c=>!ids.has(c.id));
+      } else {
+        dealOne(player); dealOne(dealer); dealOne(player); dealOne(dealer);
+      }
+      render();
+      checkNaturals();
+      updateBtns();
+    }
+
+    function checkNaturals(){
+      const ps = calcScore(player), ds = calcScore(dealer);
+      if(ps===21 || ds===21){
+        dealerHidden = false; render();
+        if(ps===21 && ds===21){ endRound('동점! 블랙잭 동시 발생'); }
+        else if(ps===21){ endRound('플레이어 블랙잭!'); }
+        else { endRound('딜러 블랙잭…'); }
+      }
+    }
+
+    function playerHit(){
+      if(!inRound) return; dealOne(player); render();
+      const ps = calcScore(player);
+      if(ps>21){ dealerHidden=false; render(); endRound('플레이어 버스트'); }
+      updateBtns();
+    }
+
+    function playerStand(){
+      if(!inRound) return; dealerHidden=false; render();
+      while(calcScore(dealer)<17){ dealOne(dealer); }
+      render();
+      const ps = calcScore(player), ds=calcScore(dealer);
+      if(ds>21) endRound('딜러 버스트! 플레이어 승');
+      else if(ps>ds) endRound('플레이어 승');
+      else if(ps<ds) endRound('딜러 승');
+      else endRound('무승부 (Push)');
+    }
+
+    function endRound(message){
+      inRound=false; $status.textContent = message;
+      $status.className = 'status ' + (/승|버스트!/.test(message)?'good':/딜러 블랙잭|플레이어 버스트|딜러 승/.test(message)?'bad':'');
+      updateBtns();
+    }
+
+    function updateBtns(){
+      el('btnHit').disabled = !inRound;
+      el('btnStand').disabled = !inRound;
+    }
+
+    function toggleTrainer(){
+      trainer=!trainer;
+      el('btnToggleTrainer').textContent = `관리자모드 (T): ${trainer? 'ON':'OFF'}`;
+      el('trainerBox').style.display = trainer? 'block':'none';
+    }
+
+    // --- Rig Modal Logic ---
+    const MOD = el('rigModal');
+    const selects = {p1:el('p1'), p2:el('p2'), d1:el('d1'), d2:el('d2')};
+    const previews = {p1:el('p1prev'), p2:el('p2prev'), d1:el('d1prev'), d2:el('d2prev')};
+
+    function openRig(){ if(!trainer){return} fillSelects(); MOD.style.display='flex'; MOD.setAttribute('aria-hidden','false'); }
+    function closeRig(){ MOD.style.display='none'; MOD.setAttribute('aria-hidden','true'); }
+
+    function allCards(){
+      const list=[]; for(const s of SUITS){ for(const r of RANKS){ list.push({suit:s,rank:r,id:`${r}${s}`}); } }
+      return list;
+    }
+
+    function optionOf(c){ const t = `${c.rank}${c.suit}`; const o=document.createElement('option'); o.value=c.id; o.textContent=t; o.dataset.rank=c.rank; o.dataset.suit=c.suit; return o; }
+
+    function fillSelects(){
+      const list = allCards();
+      for(const key of Object.keys(selects)){
+        const sel = selects[key]; sel.innerHTML='';
+        list.forEach(c=> sel.appendChild(optionOf(c)) );
+        sel.addEventListener('change', ()=>updatePreview(key));
+        sel.selectedIndex = Math.floor(Math.random()*list.length);
+        updatePreview(key);
+      }
+      preventDupes();
+    }
+
+    function updatePreview(key){
+      const sel = selects[key];
+      const rank = sel.options[sel.selectedIndex].dataset.rank;
+      const suit = sel.options[sel.selectedIndex].dataset.suit;
+      const v = previews[key];
+      v.className = 'card' + ((suit==='♥'||suit==='♦')?' red':'');
+      v.innerHTML = `<div class="suit">${suit}</div><div class="big">${suit}</div><div class="rank">${rank}</div>`;
+      preventDupes();
+    }
+
+    function preventDupes(){
+      const chosen = new Set();
+      for(const key in selects){
+        const sel = selects[key];
+        const val = sel.value; if(val) chosen.add(val);
+      }
+      for(const key in selects){
+        const sel = selects[key];
+        for(const opt of sel.options){ opt.disabled = false; if(chosen.has(opt.value) && opt.value!==sel.value){ opt.disabled = true; } }
+      }
+    }
+
+    function getRigged(){
+      const make = (sel)=>({ id: sel.value, rank: sel.options[sel.selectedIndex].dataset.rank, suit: sel.options[sel.selectedIndex].dataset.suit });
+      return { p1: make(selects.p1), p2: make(selects.p2), d1: make(selects.d1), d2: make(selects.d2) };
+    }
+
+    // --- Events ---
+    el('btnNew').addEventListener('click', ()=>{ startRound(null); });
+    el('btnHit').addEventListener('click', playerHit);
+    el('btnStand').addEventListener('click', playerStand);
+    el('btnToggleTrainer').addEventListener('click', toggleTrainer);
+
+    el('btnRigHands').addEventListener('click', ()=>{ if(!inRound) openRig(); else alert('라운드 시작 전에 설정하세요.'); });
+    el('btnResetDeck').addEventListener('click', ()=>{ freshShoe(); alert('덱을 새로 섞었습니다.'); });
+    el('btnReveal').addEventListener('click', ()=>{ dealerHidden=false; render(); });
+
+    el('rigCancel').addEventListener('click', closeRig);
+    el('rigApply').addEventListener('click', ()=>{ closeRig(); startRound(getRigged()); });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      if(k==='h') playerHit();
+      if(k==='s') playerStand();
+      if(k==='n') startRound(null);
+      if(k==='t') toggleTrainer();
+    });
+
+    // Init
+    freshShoe();
+    render();
+
+    // --- PWA 설치: beforeinstallprompt 핸들링 ---
+    let deferredPrompt = null;
+    const btnInstall = el('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btnInstall.style.display = 'inline-block';
+      $debug.textContent = '설치 가능 상태 (beforeinstallprompt 수신).';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      $debug.textContent = `설치 프롬프트 응답: ${outcome}`;
+      deferredPrompt = null;
+      btnInstall.style.display = 'none';
+    });
+
+    // PWA: 서비스워커 등록 (scope 자동)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(async (reg) => {
+            $debug.textContent = 'SW 등록 성공. 컨트롤 중인지 확인 중…';
+            // 컨트롤 상태 표시
+            if (navigator.serviceWorker.controller) {
+              $debug.textContent = 'SW가 페이지를 컨트롤 중.';
+            } else {
+              $debug.textContent = 'SW가 아직 컨트롤하지 않음. 한 번 새로고침 필요.';
+            }
+          })
+          .catch(err => { $debug.textContent = 'SW 등록 실패: ' + err; });
+      });
+    }
+  </script>
+</body>
+</html>
